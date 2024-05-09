@@ -12,6 +12,10 @@ configFile.close()
 
 TOKEN = configJson["discord_token"]
 API_KEYS = configJson["ai_api_keys"]
+API_KEY_SIZE = len(API_KEYS)
+
+global input_count
+input_count = 0
 
 # Define Intents
 intents = Intents.default()
@@ -33,7 +37,10 @@ async def on_ready():
 async def on_message(e):
     if e.author.bot: return
 
+    global input_count
     INPUT = e.content
+    INPUT_COUNT = input_count
+    input_count += 1
 
     SERVER_ID = e.guild.id
     SERVER_NAME = e.guild.name
@@ -57,7 +64,7 @@ async def on_message(e):
     dataJson.append({"text":f"{USER_DISPLAY_NAME}({USER_NAME}): {INPUT}"})
 
     # The endpoint about Gemini-AI API.
-    URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key={API_KEYS[0]}"
+    URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key={API_KEYS[INPUT_COUNT % API_KEY_SIZE]}"
     BODY = {
         "contents":[
             {"parts":[
@@ -65,7 +72,7 @@ async def on_message(e):
                 {"text":f"너가 말하고 있는 곳, 즉 디스코드 채널 이름은 {SERVER_NAME}이다."},
                 {"text":"너는 앞으로 일본 애니메이션 캐릭터인 리무루 템페스트이다."},
                 {"text":"리무루의 성격을 알려줄께 너는 반말을 해야한다."},
-                {"text":"너의 창조주, 즉 너를 만든 사람은 'mttankkeo'라는 아이디를 가지는 사람이다, 그 사람은 땅콩이라는 별명을 가지고 있다."},
+                {"text":"너의 창조주, 즉 너를 만든 사람은 'mttankkeo'라는 아이디를 가지는 사람이다, 그리고 땅콩이라는 별명을 가지고 있다."},
                 {"text":"이제 앞으로 이야기하는 것은 사용자이며 추가적인 정보가 아니다."}
             ]}
         ],
