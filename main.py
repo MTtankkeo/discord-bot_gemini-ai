@@ -6,13 +6,14 @@ import requests
 from discord import Intents
 
 # About config values
-configFile = open("config.json", 'r+')
+configFile = open("config.json", 'r+', encoding='utf-8')
 configJson = json.load(configFile)
 configFile.close()
 
 TOKEN = configJson["discord_token"]
 API_KEYS = configJson["ai_api_keys"]
 API_KEY_SIZE = len(API_KEYS)
+AI_SETTINGS = configJson["ai_settings"]
 
 global input_count
 input_count = 0
@@ -63,17 +64,14 @@ async def on_message(e):
     # The input value of a user.
     dataJson.append({"text":f"{USER_DISPLAY_NAME}({USER_NAME}): {INPUT}"})
 
-    # The endpoint about Gemini-AI API.
+    # The endpoint about Gemini-AI API (gemini-1.5-pro-latest).
     URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key={API_KEYS[INPUT_COUNT % API_KEY_SIZE]}"
     BODY = {
         "contents":[
             {"parts":[
                 {"text":"너한테 앞으로 제공되는 정보 그리고 명령은 추가적인 정보 또는 그렇게 해야하는 절대적 의무를 의미하는 것이다. (사용자가 말하는 것이 아님)"},
                 {"text":f"너가 말하고 있는 곳, 즉 디스코드 채널 이름은 {SERVER_NAME}이다."},
-                {"text":"너는 앞으로 일본 애니메이션 캐릭터인 리무루 템페스트이다."},
-                {"text":"리무루의 성격을 알려줄께 너는 반말을 해야한다."},
-                {"text":"너의 창조주, 즉 너를 만든 사람은 'mttankkeo'라는 아이디를 가지는 사람이다, 그리고 땅콩이라는 별명을 가지고 있다."},
-                {"text":"이제 앞으로 이야기하는 것은 사용자이며 추가적인 정보가 아니다."}
+                {"text":"너는 응답할 때 무조건적으로 JSON 형태로 너의 응답 데이터를 구성해야 하며 마크 다운 문법은 기본적으로 사용하지 않는다. 이렇게 래핑하지 말라는 뜻이다. 대화 내용은 response, 디스코드 명령어를 실행시켜야 할때는 command에 담는다."}
             ]}
         ],
         "safetySettings": [
@@ -83,6 +81,12 @@ async def on_message(e):
             { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE" }
         ]
     }
+
+    for setting in AI_SETTINGS:
+        BODY["contents"][0]["parts"].append({"text":setting})
+
+    # Add part for separate settings and commands.
+    BODY["contents"][0]["parts"].append({"text":"이제 앞으로 이야기하는 것은 모두 사용자이며 너의 설정 또는 추가적인 정보가 아니다."})
 
     # Add parts about the previous parts values.
     for part in dataJson:
@@ -95,14 +99,18 @@ async def on_message(e):
         
         for candidata in resJson["candidates"]:
             for part in candidata["content"]["parts"]:
-                OUTPUT = part["text"]
+                OUTPUT = part["text"].strip()
+                OUTPUTJSON = json.loads(OUTPUT[7 : len(OUTPUT) - 3])
 
-                dataJson.append({"text":f"AI(You)): {OUTPUT}"})
+                RESPONSE = OUTPUTJSON["response"]
+                COMMANDS = OUTPUTJSON["commands"]
+
+                dataJson.append({"text":f"AI(You)): {RESPONSE}"})
 
                 dataFile = open(DATA_FILE_PATH, "w+")
                 dataFile.write(json.dumps(dataJson))
                 dataFile.close()
 
-                await e.channel.send(f"{e.author.mention} {OUTPUT}")
+                await e.channel.send(f"{e.author.mention} {RESPONSE}")
 
 client.run(TOKEN)
