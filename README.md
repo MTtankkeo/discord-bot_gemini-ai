@@ -9,7 +9,7 @@ You need to create file `config.json` in a current folder, And then enter json t
 ```json
 {
     "discord_token": "---",
-    "ai_api_keys": [ // Must be Gemini API Key
+    "ai_api_keys": [
         "---",
         "---",
         "---"
