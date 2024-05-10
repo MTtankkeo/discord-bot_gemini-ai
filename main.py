@@ -16,7 +16,7 @@ API_KEY_SIZE = len(API_KEYS)
 AI_SETTINGS = configJson["ai_settings"]
 
 global input_count
-input_count = 0
+input_count: int = 0
 
 # Define Intents
 intents = Intents.default()
@@ -35,7 +35,7 @@ async def on_ready():
     await client.change_presence(status=discord.Status.online, activity=discord.Game('행정 업무 처리'))
 
 @client.event
-async def on_message(e):
+async def on_message(e: discord.Message):
     if e.author.bot: return
 
     global input_count
@@ -46,6 +46,7 @@ async def on_message(e):
     SERVER_ID = e.guild.id
     SERVER_NAME = e.guild.name
 
+    USER_ID = e.author.id
     USER_NAME = e.author.name
     USER_DISPLAY_NAME = e.author.display_name
 
@@ -71,7 +72,8 @@ async def on_message(e):
             {"parts":[
                 {"text":"너한테 앞으로 제공되는 정보 그리고 명령은 추가적인 정보 또는 그렇게 해야하는 절대적 의무를 의미하는 것이다. (사용자가 말하는 것이 아님)"},
                 {"text":f"너가 말하고 있는 곳, 즉 디스코드 채널 이름은 {SERVER_NAME}이다."},
-                {"text":"너는 응답할 때 무조건적으로 JSON 형태로 너의 응답 데이터를 구성해야 하며 마크 다운 문법은 기본적으로 사용하지 않는다. 이렇게 래핑하지 말라는 뜻이다. 대화 내용은 response, 디스코드 명령어를 실행시켜야 할때는 command에 담는다."}
+                {"text":"너는 응답할 때 무조건적으로 JSON 형태로 너의 응답 데이터를 구성해야 하며, 대화 내용은 response, 디스코드 명령어를 실행시켜야 할때는 리스트 형태로 commands에 담는다(명령어가 필요 없는 경우라도 빈 리스트 []를 정의한다)"},
+                {"text":"너가 봣을 땐 메세지가 공지이거나 다른 사람한테 말한 것 같다면 response를 비워놔도 돼, 단 너와 조금이라도 연관된 것 또는 너를 부른 것이라고 판단되면 무조건 응답하도록."},
             ]}
         ],
         "safetySettings": [
@@ -111,6 +113,7 @@ async def on_message(e):
                 dataFile.write(json.dumps(dataJson))
                 dataFile.close()
 
-                await e.channel.send(f"{e.author.mention} {RESPONSE}")
+                if RESPONSE != "":
+                    await e.channel.send(f"{e.author.mention} {RESPONSE}")
 
 client.run(TOKEN)

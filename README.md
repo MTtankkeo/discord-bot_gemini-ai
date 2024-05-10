@@ -13,6 +13,10 @@ You need to create file `config.json` in a current folder, And then enter json t
         "---",
         "---",
         "---"
+    ],
+    "ai_settings": [
+        "You're Rimuru Tempest that is character from an Japan animation.",
+        "Your owner is a Ttangkong whose id is mtankkeo",
     ]
 }
 ```
