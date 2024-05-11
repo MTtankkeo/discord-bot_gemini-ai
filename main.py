@@ -58,6 +58,9 @@ async def on_message(e: discord.Message):
 
     DATA_FILE_PATH = f"data/{SERVER_ID}.json"
 
+    
+
+    # When a data directory is not exists, need to create a directory file.
     if not os.path.exists("data"):
         os.makedirs("data")
 
@@ -93,6 +96,12 @@ async def on_message(e: discord.Message):
 
     for setting in AI_SETTINGS:
         BODY["contents"][0]["parts"].append({"text":setting})
+
+    # Add a extra info about the users.
+    for member in e.guild.members:
+        if member.activity != None:
+            ACTIVITY = member.activity
+            BODY["contents"][0]["parts"].append({"text":f"{member.name}이(가) 하고 있는 활동 또는 게임은 '{ACTIVITY.name}'이다."})
 
     # Add part for separate settings and commands.
     BODY["contents"][0]["parts"].append({"text":"이제 앞으로 이야기하는 것은 모두 사용자이며 너의 설정 또는 추가적인 정보가 아니다."})
